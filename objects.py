@@ -41,19 +41,32 @@ class Ship(SpaceObject):
     def __init__(self, img_file, x, y):
         super().__init__(img_file, x, y)
         self.direction = 0
-        self.speed = 50
-        self.rspeed = 10
+        self.speed = 0
+        self.thrust = 5         #zrychlení
+        self.rspeed = 5         #rychlost otáčení
+        
         
         
     def __str__(self):
         return str(self.x) + str(self.y)
     
     def control(self, keys):
+        
+        """W = 119
+           S = 115
+           A = 97
+           D = 100
+           spc = 32"""
+           
         for key in keys:
             if key == 119: #W
-                self.speed += 10
+                self.speed += self.thrust
             elif key == 115:
-            
+                self.speed -= self.thrust
+            elif key == 97:
+                self.direction -= self.rspeed
+            elif key == 100:
+                self.direction += self.rspeed
         pass
         
 
