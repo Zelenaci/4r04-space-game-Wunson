@@ -1,24 +1,11 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Nov 14 09:14:23 2018
-
-@author: svo35103
-"""
 import pyglet
 from math import sin, cos, radians, pi
+
 fps = 144
 batch = pyglet.graphics.Batch()
 window = pyglet.window.Window(1200, 800)
 
-'''
-class Window(object):
-
-    def __init__(self, width, height):
-        pass
-'''
-
-
+"""______________________________OBJECT_____________________________________"""
 class SpaceObject(object):
 
     def __init__(self, img_file, x, y):
@@ -28,8 +15,6 @@ class SpaceObject(object):
         self.winx = 0 # v okne
         self.winy = 0 # -//-
         self.sprite = self.load_image(img_file)
-        # self.hitbox = range((self.x - self.sprite.width // 2), (self.x + self.sprite.width // 2))
-        # self.hitboy = range((self.y - self.sprite.height // 2), (self.y + self.sprite.height // 2))
 
     def load_image(self, path):
         load = pyglet.image.load(path)
@@ -50,8 +35,8 @@ class SpaceObject(object):
         self.winx = self.x - (player.x - window.width / 2)
         self.winy = self.y - (player.y - window.height / 2)
 
-        
-class Ship(SpaceObject):
+"""_______________________________PLAYER____________________________________"""
+class PlayerShip(SpaceObject):
     
     def __init__(self, img_file, x, y):
         super().__init__(img_file, x, y)
@@ -90,7 +75,11 @@ class Ship(SpaceObject):
         self.render()
         self.refresh()
 
+"""______________________________________ENEMY______________________________"""
+class EnemyShip(SpaceObject):
+    pass
 
+"""__________________________________________METEOR_________________________"""
 class Meteor(SpaceObject):
 
     def __init__(self, img_file, x, y, speed=0, rspeed=0):
@@ -105,6 +94,7 @@ class Meteor(SpaceObject):
         self.render()
         self.refresh()
 
+"""_______________________________EVENTS____________________________________"""
 @window.event
 def on_key_press(symbol, modifiers):
     player.keys.append(symbol)
@@ -114,19 +104,14 @@ def on_key_press(symbol, modifiers):
 def on_key_release(symbol, modifier):
     player.keys.remove(symbol)
 
-
-'''           TEST             '''
-
-
-player = Ship("test.png", 100, 100)
-meteority = [Meteor('/home/roman/git/4r04-space-game-Wunson/PNG/Meteors/meteorBrown_big1.png', 200, 100, 3, 3), Meteor('/home/roman/git/4r04-space-game-Wunson/PNG/Meteors/meteorBrown_big1.png', 300, 300, 3, 3)]
-keys = []
-
-
 @window.event
 def on_draw():
     window.clear()
     batch.draw()
 
+"""_________________________________MAIN____________________________________"""
+player = PlayerShip("test.png", 100, 100)
+meteority = [Meteor("PNG/Meteors/meteorBrown_big1.png", 200, 100, 3, 3), Meteor('PNG/Meteors/meteorBrown_big1.png', 300, 300, 3, 3)]
+keys = []
 
 pyglet.app.run()
