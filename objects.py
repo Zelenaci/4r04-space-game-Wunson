@@ -80,7 +80,7 @@ class PlayerShip(SpaceObject):
     
     def drag(self):
         self.speed -= 50/fps
-    
+
     def tick(self, dt):
         self.control()
         self.move(dt)
@@ -120,10 +120,13 @@ def on_draw():
 player = PlayerShip("test.png", 100, 100)
 keys = []
 
-rojmeteoru = []
-for x in range(0, 100):
+def tick():
+    pass
+
+meteors = []
+for x in range(0, 20):
     x = randint(0, 1000)
     y = randint(0, 1000)
-    meteor = Meteor('PNG/Meteors/meteorBrown_big1.png', x, y)
+    meteors.append(Meteor('PNG/Meteors/meteorBrown_big1.png', x, y))
     
 pyglet.app.run()
