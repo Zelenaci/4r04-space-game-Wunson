@@ -7,7 +7,8 @@ Created on Wed Nov 14 09:14:23 2018
 """
 import pyglet
 from math import sin, cos, radians, pi
-fps = 144
+import random
+fps = 60
 batch = pyglet.graphics.Batch()
 window = pyglet.window.Window(1200, 800)
 
@@ -28,8 +29,8 @@ class SpaceObject(object):
         self.winx = 0 # v okne
         self.winy = 0 # -//-
         self.sprite = self.load_image(img_file)
-        # self.hitbox = range((self.x - self.sprite.width // 2), (self.x + self.sprite.width // 2))
-        # self.hitboy = range((self.y - self.sprite.height // 2), (self.y + self.sprite.height // 2))
+        self.hitbox = range((self.x - self.sprite.width // 2), (self.x + self.sprite.width // 2))
+        self.hitboy = range((self.y - self.sprite.height // 2), (self.y + self.sprite.height // 2))
 
     def load_image(self, path):
         load = pyglet.image.load(path)
@@ -38,6 +39,8 @@ class SpaceObject(object):
         return pyglet.sprite.Sprite(load, batch=batch)
     
     def refresh(self):
+        self.winx = self.x - (player.x - window.width // 2)
+        self.winy = self.y - (player.y - window.height // 2)
         self.sprite.x = self.winx
         self.sprite.y = self.winy
         self.sprite.rotation = self.direction
@@ -45,10 +48,6 @@ class SpaceObject(object):
     def move(self, dt):
         self.x += dt * self.speed * cos(pi/2 - radians(self.direction))
         self.y += dt * self.speed * sin(pi/2 - radians(self.direction))
-
-    def render(self):
-        self.winx = self.x - (player.x - window.width / 2)
-        self.winy = self.y - (player.y - window.height / 2)
 
         
 class Ship(SpaceObject):
@@ -87,7 +86,6 @@ class Ship(SpaceObject):
     def tick(self, dt):
         self.control()
         self.move(dt)
-        self.render()
         self.refresh()
 
 
@@ -102,7 +100,6 @@ class Meteor(SpaceObject):
 
     def tick(self, dt):
         self.move(dt)
-        self.render()
         self.refresh()
 
 @window.event
@@ -118,8 +115,15 @@ def on_key_release(symbol, modifier):
 '''           TEST             '''
 
 
+rojmeteoru = []
+for x in range(0, 100):
+    x = random.randint(0, 1000)
+    y = random.randint(0, 1000)
+    speed = random.randint(0, 10)
+    rspeed = random.randint(0, 5)
+    meteor = Meteor('PNG/Meteors/meteorBrown_big1.png', x, y, speed, rspeed)
+
 player = Ship("test.png", 100, 100)
-meteority = [Meteor('/home/roman/git/4r04-space-game-Wunson/PNG/Meteors/meteorBrown_big1.png', 200, 100, 3, 3), Meteor('/home/roman/git/4r04-space-game-Wunson/PNG/Meteors/meteorBrown_big1.png', 300, 300, 3, 3)]
 keys = []
 
 
