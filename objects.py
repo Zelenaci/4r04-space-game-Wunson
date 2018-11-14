@@ -70,10 +70,14 @@ class PlayerShip(SpaceObject):
                 self.direction -= self.rspeed
             elif key == 100:
                 self.direction += self.rspeed
+                
+    def drag(self):
+        self.speed -= 50/fps
 
     def tick(self, dt):
         self.control()
         self.move(dt)
+        self.drag()
         self.refresh()
 
 """______________________________________ENEMY______________________________"""
