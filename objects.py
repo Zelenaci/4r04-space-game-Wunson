@@ -1,7 +1,8 @@
 import pyglet
 from math import sin, cos, radians, pi
+from random import randint
 
-fps = 144
+fps = 60
 batch = pyglet.graphics.Batch()
 window = pyglet.window.Window(1200, 800)
 
@@ -16,6 +17,9 @@ class SpaceObject(object):
         self.winy = 0 # -//-
         self.sprite = self.load_image(img_file)
 
+        self.hitbox = range((self.x - self.sprite.width // 2), (self.x + self.sprite.width // 2))
+        self.hitboy = range((self.y - self.sprite.height // 2), (self.y + self.sprite.height // 2))
+
     def load_image(self, path):
         load = pyglet.image.load(path)
         load.anchor_x = load.width // 2
@@ -23,6 +27,8 @@ class SpaceObject(object):
         return pyglet.sprite.Sprite(load, batch=batch)
     
     def refresh(self):
+        self.winx = self.x - (player.x - window.width // 2)
+        self.winy = self.y - (player.y - window.height // 2)
         self.sprite.x = self.winx
         self.sprite.y = self.winy
         self.sprite.rotation = self.direction
@@ -30,10 +36,6 @@ class SpaceObject(object):
     def move(self, dt):
         self.x += dt * self.speed * cos(pi/2 - radians(self.direction))
         self.y += dt * self.speed * sin(pi/2 - radians(self.direction))
-
-    def render(self):
-        self.winx = self.x - (player.x - window.width / 2)
-        self.winy = self.y - (player.y - window.height / 2)
 
 """_______________________________PLAYER____________________________________"""
 class PlayerShip(SpaceObject):
@@ -72,7 +74,6 @@ class PlayerShip(SpaceObject):
     def tick(self, dt):
         self.control()
         self.move(dt)
-        self.render()
         self.refresh()
 
 """______________________________________ENEMY______________________________"""
@@ -91,7 +92,6 @@ class Meteor(SpaceObject):
 
     def tick(self, dt):
         self.move(dt)
-        self.render()
         self.refresh()
 
 """_______________________________EVENTS____________________________________"""
@@ -108,10 +108,17 @@ def on_key_release(symbol, modifier):
 def on_draw():
     window.clear()
     batch.draw()
-
+  
 """_________________________________MAIN____________________________________"""
 player = PlayerShip("test.png", 100, 100)
-meteority = [Meteor("PNG/Meteors/meteorBrown_big1.png", 200, 100, 3, 3), Meteor('PNG/Meteors/meteorBrown_big1.png', 300, 300, 3, 3)]
 keys = []
 
+rojmeteoru = []
+for x in range(0, 100):
+    x = randint(0, 1000)
+    y = randint(0, 1000)
+    speed = randint(0, 10)
+    rspeed = randint(0, 5)
+    meteor = Meteor('PNG/Meteors/meteorBrown_big1.png', x, y, speed, rspeed)
+    
 pyglet.app.run()
