@@ -77,12 +77,18 @@ class PlayerShip(SpaceObject):
                 self.direction += self.rspeed
                 self.rotation += self.rspeed
 
+    def hit(self):
+        for meteor in meteors:
+            print(".", end = "")
+            if (set(self.hitbox) and set(meteor.hitbox)) or (set(self.hitboy) and set(meteor.hitboy)):
+                print("AAAAAAAAAAAAAAAAAAA")
     
     def drag(self):
         self.speed -= 50/fps
 
     def tick(self, dt):
         self.control()
+        self.hit()
         self.move(dt)
         self.drag()
         self.refresh()
@@ -120,11 +126,13 @@ def on_draw():
 player = PlayerShip("test.png", 100, 100)
 keys = []
 
+
 def tick():
     pass
 
 meteors = []
 for x in range(0, 20):
+
     x = randint(0, 1000)
     y = randint(0, 1000)
     meteors.append(Meteor('PNG/Meteors/meteorBrown_big1.png', x, y))
