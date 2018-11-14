@@ -77,9 +77,14 @@ class PlayerShip(SpaceObject):
                 self.direction += self.rspeed
                 self.rotation += self.rspeed
 
+    
+    def drag(self):
+        self.speed -= 50/fps
+    
     def tick(self, dt):
         self.control()
         self.move(dt)
+        self.drag()
         self.refresh()
 
 """______________________________________ENEMY______________________________"""
