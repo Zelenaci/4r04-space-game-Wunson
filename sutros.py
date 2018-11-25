@@ -29,8 +29,7 @@ class Meteor():
         self.direction = direction if direction != None else randint(0, 360)
         self.speed = speed if speed != None else randint(30, 150)
         
-        path = str("meteors/" + str(randint(0,19)) + ".png")
-        self.sprite = load_image(path)
+        self.sprite = load_image("test.png")
 
         self.sprite.x = self.x
         self.sprite.y = self.y
