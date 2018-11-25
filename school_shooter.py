@@ -27,7 +27,7 @@ class SpaceObject(object):
         self.sprite.rotation = degrees(self.rotation - (pi /2))
         
     def move(self, dt):
-        self.vector *= 0.98
+        self.vector *= 0.989
         self.x -= dt * self.vector.real
         self.y += dt * self.vector.imag
         
@@ -38,8 +38,8 @@ class Ship(SpaceObject):
     def __init__(self, img_file, x, y):
         super().__init__(img_file, x, y)
         self.rotation = pi / 2
-        self.thrust = 30
-        self.rspeed = radians(10)
+        self.thrust = 25
+        self.rspeed = radians(9)
         self.vector = 0 + 0j
     
     def bounce(self):
