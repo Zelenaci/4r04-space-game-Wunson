@@ -1,6 +1,6 @@
 "____________________________________imports__________________________________"
 import pyglet
-from math import cos, sin, pi, radians
+from math import cos, sin, pi, radians, degrees
 
 "________________________________pyglet_setup_________________________________"
 window = pyglet.window.Window(1300, 700)
@@ -24,7 +24,7 @@ class SpaceObject(object):
     def refresh(self):
         self.sprite.x = self.x
         self.sprite.y = self.y
-        self.sprite.rotation = self.rotation
+        self.sprite.rotation = degrees(self.rotation - (pi /2))
         
     def move(self, dt):
         self.x += dt * self.vector.real
@@ -36,8 +36,8 @@ class Ship(SpaceObject):
     def __init__(self, img_file, x, y):
         super().__init__(img_file, x, y)
         self.rotation = pi / 2
-        self.thrust = 5
-        self.rspeed = radians(5)
+        self.thrust = 1
+        self.rspeed = radians(1)
         self.vector = 0 + 0j
         
         
@@ -56,15 +56,15 @@ class Ship(SpaceObject):
             if key == 119: #W
                 new_vector = self.vector + complex(self.thrust*cos(self.rotation), self.thrust*sin(self.rotation)) 
                 
-                if abs(new_vector) < 100:
+                if abs(new_vector) < 50:
                     self.vector = new_vector
             
             elif key == 115:
                 pass
             elif key == 97:
-                self.rotation += self.rspeed
-            elif key == 100:
                 self.rotation -= self.rspeed
+            elif key == 100:
+                self.rotation += self.rspeed
                 
     def tick(self, dt):
         self.control(keys)
@@ -91,7 +91,7 @@ def tick(dt):
 
 "_______________________________________main__________________________________"    
         
-pes = Ship("test.png", 100, 100)
+pes = Ship("test.png", window.width/2, window.height/2)
 pyglet.clock.schedule_interval(tick, 1/30)
 
 pyglet.app.run()
