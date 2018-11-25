@@ -27,6 +27,7 @@ class SpaceObject(object):
         self.sprite.rotation = degrees(self.rotation - (pi /2))
         
     def move(self, dt):
+        self.vector *= 0.98
         self.x -= dt * self.vector.real
         self.y += dt * self.vector.imag
         
@@ -70,10 +71,6 @@ class Ship(SpaceObject):
         self.control(keys)
         self.move(dt)
         self.refresh()
-        print(abs(self.vector))
-        
-        if(abs(self.vector)):
-            self.vector *= 0.9
         
         
 
@@ -96,7 +93,7 @@ def tick(dt):
 
 "_______________________________________main__________________________________"    
         
-pes = Ship("test.png", window.width/2, window.height/2)
-pyglet.clock.schedule_interval(tick, 1/30)
+pes = Ship("test_mini.png", window.width/2, window.height/2)
+pyglet.clock.schedule_interval(tick, 1/60)
 
 pyglet.app.run()
