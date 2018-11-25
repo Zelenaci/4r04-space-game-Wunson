@@ -37,7 +37,7 @@ class Ship(SpaceObject):
     def __init__(self, img_file, x, y):
         super().__init__(img_file, x, y)
         self.rotation = pi / 2
-        self.thrust = 50
+        self.thrust = 30
         self.rspeed = radians(10)
         self.vector = 0 + 0j
         
@@ -57,7 +57,7 @@ class Ship(SpaceObject):
             if key == 119: #W
                 new_vector = self.vector + complex(self.thrust*cos(self.rotation), self.thrust*sin(self.rotation)) 
                 
-                if abs(new_vector) < 5000:
+                if abs(new_vector) < 750:
                     self.vector = new_vector
             
             elif key == 115:
