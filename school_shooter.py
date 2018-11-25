@@ -27,7 +27,7 @@ class SpaceObject(object):
         self.sprite.rotation = degrees(self.rotation - (pi /2))
         
     def move(self, dt):
-        self.x += dt * self.vector.real
+        self.x -= dt * self.vector.real
         self.y += dt * self.vector.imag
         
         
@@ -36,8 +36,8 @@ class Ship(SpaceObject):
     def __init__(self, img_file, x, y):
         super().__init__(img_file, x, y)
         self.rotation = pi / 2
-        self.thrust = 1
-        self.rspeed = radians(5)
+        self.thrust = 50
+        self.rspeed = radians(10)
         self.vector = 0 + 0j
         
         
@@ -56,7 +56,7 @@ class Ship(SpaceObject):
             if key == 119: #W
                 new_vector = self.vector + complex(self.thrust*cos(self.rotation), self.thrust*sin(self.rotation)) 
                 
-                if abs(new_vector) < 20:
+                if abs(new_vector) < 5000:
                     self.vector = new_vector
             
             elif key == 115:
@@ -70,6 +70,11 @@ class Ship(SpaceObject):
         self.control(keys)
         self.move(dt)
         self.refresh()
+        print(abs(self.vector))
+        
+        if(abs(self.vector)):
+            self.vector *= 0.9
+        
         
 
 "_________________________________events______________________________________"
