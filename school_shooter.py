@@ -31,6 +31,7 @@ class SpaceObject(object):
         self.x -= dt * self.vector.real
         self.y += dt * self.vector.imag
         
+    
         
 class Ship(SpaceObject):
     
@@ -40,7 +41,13 @@ class Ship(SpaceObject):
         self.thrust = 30
         self.rspeed = radians(10)
         self.vector = 0 + 0j
+    
+    def bounce(self):
+        if self.x >= window.width or self.x <= 0:
+            self.vector = complex(-self.vector.real, self.vector.imag) 
         
+        if self.y >= window.height or self.y <= 0:
+            self.vector = complex(self.vector.real, -self.vector.imag)
         
     def __str__(self):
         return str(self.x) + str(self.y)
@@ -70,6 +77,7 @@ class Ship(SpaceObject):
     def tick(self, dt):
         self.control(keys)
         self.move(dt)
+        self.bounce()
         self.refresh()
         
         
