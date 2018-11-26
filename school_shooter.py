@@ -16,7 +16,10 @@ class SpaceObject(object):
         self.x = x
         self.y = y
         self.mass = mass
+        
         self.sprite = self.load_image(img_file)
+        self.sprite.x = self.x
+        self.sprite.y = self.y
         
         self.hitbox = range(int(self.x - self.sprite.width // 2), int(self.x + self.sprite.width // 2))
         self.hitboy = range(int(self.y - self.sprite.height // 2), int(self.y + self.sprite.height // 2))
@@ -55,7 +58,7 @@ class Meteor(SpaceObject):
         super().__init__(img_file, x, y, mass)
     
     def get_hit(self):
-        if player.x in self.hitbox and player.y in self.hitboy:
+        if abs(self.x - player.x) < self.sprite.width and abs(self.y - player.y) < self.sprite.height:
             mass = self.mass + player.mass
             
             force = abs(self.vector + player.vector) / mass
@@ -130,11 +133,12 @@ def on_key_release(key, mod):
 
 def tick(dt):
     player.tick(dt)
+    meteor.tick(dt)
 
 "_______________________________________main__________________________________"    
         
 player = PlayerShip("test_mini.png", window.width/2, window.height/2, 10)
-meteor = Meteor("test.png", window.width, window.height, 10)
+meteor = Meteor("test.png", 100, 100, 10)
 
 pyglet.clock.schedule_interval(tick, 1/60)
 
