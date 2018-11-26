@@ -33,26 +33,41 @@ class SpaceObject(object):
         self.sprite.rotation = degrees(self.rotation - (pi /2))
     
     def bounce(self):
-        if self.x >= window.width or self.x <= 0:
+        if self.x > window.width or self.x < 0:
             self.vector = complex(-self.vector.real, self.vector.imag) 
         
-        if self.y >= window.height or self.y <= 0:
-            self.vector = complex(self.vector.real, -self.vector.imag)    
-    
+        if self.y > window.height or self.y < 0:
+            self.vector = complex(self.vector.real, -self.vector.imag)
+            
+        if self.x > window.width+15 or self.x < -15:
+            self.x = window.width -15  
+        
+        if self.y > window.height+15 or self.y < -15:
+            self.y = window.height - 15
+        
     def move(self, dt):
         self.vector *= 0.989
         self.x -= dt * self.vector.real
         self.y += dt * self.vector.imag
         
-class Meteor(object):
+class Meteor(SpaceObject):
     def __init__(self, img_file, x, y, mass):
         super().__init__(img_file, x, y, mass)
     
     def get_hit(self):
         if player.x in self.hitbox and player.y in self.hitboy:
-            pass
+            mass = self.mass + player.mass
+            
+            force = abs(self.vector + player.vector) / mass
+            
+            temp = player.vector * force * self.mass 
+            
+            player.vector = self.vector * force * player.mass
+            
+            self.vector = temp
     
     def tick(self, dt):
+        self.get_hit()
         self.move(dt)
         self.bounce()
         self.refresh()
@@ -119,6 +134,7 @@ def tick(dt):
 "_______________________________________main__________________________________"    
         
 player = PlayerShip("test_mini.png", window.width/2, window.height/2, 10)
+meteor = Meteor("test.png", window.width, window.height, 10)
 
 pyglet.clock.schedule_interval(tick, 1/60)
 
