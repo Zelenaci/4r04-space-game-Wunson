@@ -35,6 +35,11 @@ class SpaceObject(object):
         self.sprite.y = self.y
         self.sprite.rotation = degrees(self.rotation - (pi /2))
     
+    def thrst(self, thrust):
+        new_vector = self.vector + complex(thrust*cos(self.rotation), thrust*sin(self.rotation)) 
+        if abs(new_vector) < 750:
+            self.vector = new_vector
+    
     def bounce(self):
         if self.x > window.width or self.x < 0:
             self.vector = complex(-self.vector.real, self.vector.imag) 
@@ -82,7 +87,6 @@ class Meteor(SpaceObject):
 class PlayerShip(SpaceObject):
     
     def __init__(self, img_file, x, y, mass):
-        
         super().__init__(img_file, x, y, mass)
         
         self.thrust = 25
@@ -101,11 +105,7 @@ class PlayerShip(SpaceObject):
            
         for key in keys:
             if key == 119: #W
-                new_vector = self.vector + complex(self.thrust*cos(self.rotation), self.thrust*sin(self.rotation)) 
-                
-                if abs(new_vector) < 750:
-                    self.vector = new_vector
-            
+                self.thrst(25)   
             elif key == 115:
                 pass
             elif key == 97:
@@ -119,7 +119,7 @@ class PlayerShip(SpaceObject):
         self.bounce()
         self.refresh()
         
-class Missile(SpaceObject):
+class Missile(SpaceObject):    
     def __init__(self, img_file, x, y, mass):
         super().__init__(img_file, x, y, mass)
         
@@ -127,9 +127,10 @@ class Missile(SpaceObject):
         x = coordinates[0] - self.x
         y = coordinates[1] - self.y
         self.rotation = atan2(y, -x)
-        print(degrees(self.rotation))
+        print(degrees(self.rotation))    
         
     def tick(self, dt):
+        self.thrst(30)
         self.move(dt)
         self.aim(player.get_coordinates())
         self.refresh()
