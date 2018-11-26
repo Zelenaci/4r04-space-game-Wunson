@@ -1,6 +1,6 @@
 "____________________________________imports__________________________________"
 import pyglet
-from math import cos, sin, pi, radians, degrees
+from math import cos, sin, pi, radians, degrees, atan2
 
 "________________________________pyglet_setup_________________________________"
 window = pyglet.window.Window(1300, 700)
@@ -49,9 +49,12 @@ class SpaceObject(object):
             self.y = window.height - 15
         
     def move(self, dt):
-        self.vector *= 0.989
+        self.vector *= 0.98
         self.x -= dt * self.vector.real
         self.y += dt * self.vector.imag
+        
+    def get_coordinates(self):
+        return [self.x, self.y]
         
 class Meteor(SpaceObject):
     def __init__(self, img_file, x, y, mass):
@@ -116,6 +119,19 @@ class PlayerShip(SpaceObject):
         self.bounce()
         self.refresh()
         
+class Missile(SpaceObject):
+    def __init__(self, img_file, x, y, mass):
+        super().__init__(img_file, x, y, mass)
+        
+    def aim(self, coordinates):
+        x = coordinates[0] - self.x
+        y = coordinates[1] - self.x
+        self.rotation = atan2(y, x)
+        
+    def tick(self, dt):
+        self.move(dt)
+        self.aim(player.get_coordinates())
+        self.refresh()
     
 "_________________________________events______________________________________"
 @window.event
@@ -133,12 +149,13 @@ def on_key_release(key, mod):
 
 def tick(dt):
     player.tick(dt)
-    meteor.tick(dt)
+    missile.tick(dt)
 
 "_______________________________________main__________________________________"    
         
 player = PlayerShip("test_mini.png", window.width/2, window.height/2, 10)
-meteor = Meteor("test.png", 100, 100, 10)
+#meteor = Meteor("test.png", 100, 100, 10)
+missile = Missile("missile.png", 600, 300, 10)
 
 pyglet.clock.schedule_interval(tick, 1/60)
 
