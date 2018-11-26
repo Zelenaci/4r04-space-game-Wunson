@@ -125,8 +125,9 @@ class Missile(SpaceObject):
         
     def aim(self, coordinates):
         x = coordinates[0] - self.x
-        y = coordinates[1] - self.x
-        self.rotation = atan2(y, x)
+        y = coordinates[1] - self.y
+        self.rotation = atan2(y, -x)
+        print(degrees(self.rotation))
         
     def tick(self, dt):
         self.move(dt)
