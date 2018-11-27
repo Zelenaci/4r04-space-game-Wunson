@@ -19,12 +19,13 @@ def load_image(path):
 "____________________________________classes__________________________________"
 class SpaceObject(object):
 
-    def __init__(self, img_file, x, y, mass):
+    def __init__(self, img_file, x, y, mass, max_spd):
         self.rotation = pi / 2
         self.vector = 0 + 0j
         self.x = x
         self.y = y
         self.mass = mass
+        self.max_spd = max_spd
         self.drag = 0.989
         
         self.sprite = load_image(img_file)
@@ -39,9 +40,9 @@ class SpaceObject(object):
         self.sprite.y = self.y
         self.sprite.rotation = degrees(self.rotation - (pi /2))
     
-    def burn(self):
-        new_vector = self.vector + complex(self.thrust*cos(self.rotation), self.thrust*sin(self.rotation)) 
-        if abs(new_vector) < 750:
+    def burn(self, thrust):
+        new_vector = self.vector + complex(thrust*cos(self.rotation), thrust*sin(self.rotation)) 
+        if abs(new_vector) < self.max_spd:
             self.vector = new_vector
     
     def bounce(self):
@@ -63,17 +64,17 @@ class SpaceObject(object):
         if self.y < -15:
             self.y = window.height - 1
         
+    def damper(self, drag):
+        self.vector *= drag
+    
     def move(self, dt):
-        self.vector *= self.drag
         self.x -= dt * self.vector.real
         self.y += dt * self.vector.imag
-        
-    def get_coordinates(self):
-        return [self.x, self.y]
+        self.damper(self.drag)
         
 class Meteor(SpaceObject):
-    def __init__(self, img_file, x, y, mass):
-        super().__init__(img_file, x, y, mass)
+    def __init__(self, img_file, x, y, mass, max_spd):
+        super().__init__(img_file, x, y, mass, max_spd)
     
     def get_hit(self):
         pass
@@ -84,13 +85,11 @@ class Meteor(SpaceObject):
         self.bounce()
         self.refresh()
 
-
 class PlayerShip(SpaceObject):
     
-    def __init__(self, img_file, x, y, mass):
-        super().__init__(img_file, x, y, mass)
+    def __init__(self, img_file, x, y, mass, max_spd):
+        super().__init__(img_file, x, y, mass, max_spd)
         
-        self.thrust = 25
         self.rspeed = radians(9)
         
     def __str__(self):
@@ -104,18 +103,17 @@ class PlayerShip(SpaceObject):
            D = 100
            spc = 32"""
          
-        if 115 in keys or 65364 in keys:
-            self.drag = 0.95
-        else:
-            self.drag = 0.989
-         
         for key in keys:
-            if key == 119 or key == 65362: #W
-                self.burn()   
+            if key == 115 or key == 65364:
+                self.burn(-10)    
+            elif key == 119 or key == 65362: #W
+                self.burn(25)   
             elif key == 97 or key == 65361:
                 self.rotation -= self.rspeed
             elif key == 100 or key == 65363:
                 self.rotation += self.rspeed
+            elif key == 32:
+                self.damper(0.8)
                 
     def tick(self, dt):
         self.control(keys)
@@ -124,9 +122,8 @@ class PlayerShip(SpaceObject):
         self.refresh()
         
 class Missile(SpaceObject):    
-    def __init__(self, img_file, x, y, mass):
-        super().__init__(img_file, x, y, mass)
-        self.thrust = 25
+    def __init__(self, img_file, x, y, mass, max_spd):
+        super().__init__(img_file, x, y, mass, max_spd)
         
     def aim(self):
         x = player.x - self.x
@@ -134,7 +131,7 @@ class Missile(SpaceObject):
         self.rotation = atan2(y, -x)
         
     def tick(self, dt):
-        self.burn()
+        self.burn(35)
         self.move(dt)
         self.aim()
         self.refresh()
@@ -157,13 +154,13 @@ def on_key_release(key, mod):
 def tick(dt):
     player.tick(dt)
     missile.tick(dt)
+    
+    
 
 "_______________________________________main__________________________________"    
         
-player = PlayerShip("test_mini.png", window.width/2, window.height/2, 10)
-#meteor = Meteor("test.png", 100, 100, 10)
-missile = Missile("missile.png", 600, 300, 10)
-
+player = PlayerShip("test_mini.png", window.width/2, window.height/2, 10, 750)
+missile = Missile("missile.png", -1000, -1000, 10, 750)
 pyglet.clock.schedule_interval(tick, 1/60)
 
 pyglet.app.run()
