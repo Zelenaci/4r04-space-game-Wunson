@@ -1,11 +1,22 @@
+"""
+@author: jakubvasi, Wunson 
+"""
+
 "____________________________________imports__________________________________"
 import pyglet
 from math import cos, sin, pi, radians, degrees, atan2
+"____________________________________lan__________________________________"
+
+# LAN properies
+ip_adr = ""
+MAX_BUFFER_SIZE = 4096
+PORT = 1025
 
 "________________________________pyglet_setup_________________________________"
 window = pyglet.window.Window(1300, 700)
 batch = pyglet.graphics.Batch()
 keys = []
+objects = []
 
 "____________________________________functions__________________________________"
 def overlap(hitbox1, hitbox2):
@@ -16,6 +27,11 @@ def load_image(path):
         load.anchor_x = load.width // 2
         load.anchor_y = load.height // 2
         return pyglet.sprite.Sprite(load, batch = batch)
+    
+#Check if object is inside the area
+def is_in_area(x, y, x1=0, x2=window.width, y1=0, y2=window.height):
+    return x > x1 and x < x2 and y > y1 and y < y2
+
 "____________________________________classes__________________________________"
 class SpaceObject(object):
 
@@ -40,8 +56,12 @@ class SpaceObject(object):
         self.sprite.y = self.y
         self.sprite.rotation = degrees(self.rotation - (pi /2))
     
-    def burn(self, thrust):
-        new_vector = self.vector + complex(thrust*cos(self.rotation), thrust*sin(self.rotation)) 
+    def burn(self, thrust, dir="y"):
+        if dir == "y":
+            new_vector = self.vector + complex(thrust*cos(self.rotation), thrust*sin(self.rotation))
+        elif dir == "x":
+            new_vector = self.vector + complex(thrust*sin(self.rotation), thrust*cos(self.rotation))
+        
         if abs(new_vector) < self.max_spd:
             self.vector = new_vector
     
@@ -51,18 +71,6 @@ class SpaceObject(object):
         
         if self.y > window.height or self.y < 0:
             self.vector = complex(self.vector.real, -self.vector.imag)
-            
-        if self.x > window.width+15:
-            self.x = 1
-        
-        if self.x < -15:
-            self.x = window.width - 1
-        
-        if self.y > window.height+15:
-            self.y = 1
-        
-        if self.y < -15:
-            self.y = window.height - 1
         
     def damper(self, drag):
         self.vector *= drag
@@ -86,7 +94,6 @@ class Meteor(SpaceObject):
         self.refresh()
 
 class PlayerShip(SpaceObject):
-    
     def __init__(self, img_file, x, y, mass, max_spd):
         super().__init__(img_file, x, y, mass, max_spd)
         
@@ -96,31 +103,43 @@ class PlayerShip(SpaceObject):
         return str(self.x) + str(self.y)
     
     def control(self, keys):
-        
-        """W = 119
-           S = 115
-           A = 97
-           D = 100
-           spc = 32"""
-         
         for key in keys:
-            if key == 115 or key == 65364:
+            if key == 115 or key == 65364:          #S, Down
                 self.burn(-10)    
-            elif key == 119 or key == 65362: #W
-                self.burn(25)   
-            elif key == 97 or key == 65361:
+            elif key == 119 or key == 65362:        #W, Up
+                self.burn(25)
+            elif key == 97 or key == 65361:         #A, Left
                 self.rotation -= self.rspeed
-            elif key == 100 or key == 65363:
+            elif key == 100 or key == 65363:        #D, Right
                 self.rotation += self.rspeed
-            elif key == 32:
-                self.damper(0.8)
+            elif key == 110:                        #N
+                self.burn(10, "x")
+            elif key == 109:                        #M                 
+                self.burn(-10, "x")
+            elif key == 98:                         #B
+                self.damper(0.85)
+            elif key == 32:                         #Space
+                objects.append(Shot("laserBlue.png", self.x, self.y, 0, 2000, self.vector, self.rotation))
                 
     def tick(self, dt):
         self.control(keys)
         self.move(dt)
         self.bounce()
         self.refresh()
+    
         
+class Shot(SpaceObject):
+    def __init__(self, img_file, x, y, mass, max_spd, vector, rotation):
+        super().__init__(img_file, x, y, mass, max_spd)
+        self.vector = vector
+        self.rotation = rotation
+        
+    def tick(self, dt):
+        self.burn(100)
+        self.move(dt)
+        self.refresh()    
+        
+
 class Missile(SpaceObject):    
     def __init__(self, img_file, x, y, mass, max_spd):
         super().__init__(img_file, x, y, mass, max_spd)
@@ -155,10 +174,14 @@ def tick(dt):
     player.tick(dt)
     missile.tick(dt)
     
-    
+    for shot in objects:
+        if is_in_area(shot.x, shot.y):
+            shot.tick(dt)
+        else:
+            objects.remove(shot)
 
-"_______________________________________main__________________________________"    
-        
+"_______________________________________main__________________________________"
+     
 player = PlayerShip("test_mini.png", window.width/2, window.height/2, 10, 750)
 missile = Missile("missile.png", -1000, -1000, 10, 750)
 pyglet.clock.schedule_interval(tick, 1/60)
