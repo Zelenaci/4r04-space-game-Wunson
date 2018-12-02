@@ -5,17 +5,15 @@
 "____________________________________imports__________________________________"
 import pyglet
 from math import cos, sin, pi, radians, degrees, atan2
-"____________________________________lan__________________________________"
-
-# LAN properies
-ip_adr = ""
-MAX_BUFFER_SIZE = 4096
-PORT = 1025
 
 "________________________________pyglet_setup_________________________________"
+
+key = pyglet.window.key
 window = pyglet.window.Window(1300, 700)
+keyboard = key.KeyStateHandler()
+window.push_handlers(keyboard)
 batch = pyglet.graphics.Batch()
-keys = []
+
 objects = []
 
 "____________________________________functions__________________________________"
@@ -102,27 +100,38 @@ class PlayerShip(SpaceObject):
     def __str__(self):
         return str(self.x) + str(self.y)
     
-    def control(self, keys):
-        for key in keys:
-            if key == 115 or key == 65364:          #S, Down
-                self.burn(-10)    
-            elif key == 119 or key == 65362:        #W, Up
-                self.burn(25)
-            elif key == 97 or key == 65361:         #A, Left
-                self.rotation -= self.rspeed
-            elif key == 100 or key == 65363:        #D, Right
-                self.rotation += self.rspeed
-            elif key == 110:                        #N
-                self.burn(10, "x")
-            elif key == 109:                        #M                 
-                self.burn(-10, "x")
-            elif key == 98:                         #B
-                self.damper(0.85)
-            elif key == 32:                         #Space
-                objects.append(Shot("laserBlue.png", self.x, self.y, 0, 2000, self.vector, self.rotation))
-                
+    def down():
+        self.burn(-10)
+    def up():
+        self.burn(25)
+    def left():
+        self.rotation -= self.rspeed
+    def right():
+        self.rotation += self.rspeed
+    def brake():
+        self.damper(0.85)
+    def fire():
+        objects.append(Shot("laserBlue.png", self.x, self.y, 0, 2000, self.vector, self.rotation))
+    
+    
+    def control(self):
+        print(keyboard)
+        
+        if keyboard[key.DOWN]:              #S, Down
+            self.burn(-10)
+        if keyboard[key.UP]:              #W, Up
+            self.burn(25)
+        if keyboard[key.LEFT]:              #A, Left
+            self.rotation -= self.rspeed
+        if keyboard[key.RIGHT]:           #D, Right
+            self.rotation += self.rspeed
+        if keyboard[key.B]:                 #B
+            self.damper(0.85)
+        if keyboard[key.SPACE]:             #Space
+            objects.append(Shot("laserBlue.png", self.x, self.y, 0, 2000, self.vector, self.rotation))
+           
     def tick(self, dt):
-        self.control(keys)
+        self.control()
         self.move(dt)
         self.bounce()
         self.refresh()
@@ -160,15 +169,7 @@ class Missile(SpaceObject):
 def on_draw():
     window.clear()
     batch.draw()
-    
-@window.event
-def on_key_press(key, mod):
-    print(key)
-    keys.append(key)    
 
-@window.event
-def on_key_release(key, mod):
-    keys.remove(key)
 
 def tick(dt):
     player.tick(dt)
