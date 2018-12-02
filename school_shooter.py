@@ -1,7 +1,3 @@
-"""
-@author: jakubvasi, Wunson 
-"""
-
 "____________________________________imports__________________________________"
 import pyglet
 from math import cos, sin, pi, radians, degrees, atan2
@@ -27,41 +23,30 @@ def load_image(path):
         return pyglet.sprite.Sprite(load, batch = batch)
     
 #Check if object is inside the area
-def is_in_area(x, y, x1=0, x2=window.width, y1=0, y2=window.height):
+def is_in_area(x, y, x1=-50, x2=window.width+50, y1=-50, y2=window.height+50):
     return x > x1 and x < x2 and y > y1 and y < y2
 
 "____________________________________classes__________________________________"
 class SpaceObject(object):
 
-    def __init__(self, img_file, x, y, mass, max_spd):
+    def __init__(self, img_file, x, y, max_spd):
         self.rotation = pi / 2
         self.vector = 0 + 0j
         self.x = x
         self.y = y
-        self.mass = mass
         self.max_spd = max_spd
-        self.drag = 0.989
         
         self.sprite = load_image(img_file)
         self.sprite.x = self.x
         self.sprite.y = self.y
         
-        self.hitbox = (int(self.x - self.sprite.width // 2), int(self.x + self.sprite.width // 2))
-        self.hitboy = (int(self.y - self.sprite.height // 2), int(self.y + self.sprite.height // 2))
+        self.hitbox = range(int(self.x - self.sprite.width // 2), int(self.x + self.sprite.width // 2))
+        self.hitboy = range(int(self.y - self.sprite.height // 2), int(self.y + self.sprite.height // 2))
     
     def refresh(self):
         self.sprite.x = self.x
         self.sprite.y = self.y
         self.sprite.rotation = degrees(self.rotation - (pi /2))
-    
-    def burn(self, thrust, dir="y"):
-        if dir == "y":
-            new_vector = self.vector + complex(thrust*cos(self.rotation), thrust*sin(self.rotation))
-        elif dir == "x":
-            new_vector = self.vector + complex(thrust*sin(self.rotation), thrust*cos(self.rotation))
-        
-        if abs(new_vector) < self.max_spd:
-            self.vector = new_vector
     
     def bounce(self):
         if self.x > window.width or self.x < 0:
@@ -69,89 +54,67 @@ class SpaceObject(object):
         
         if self.y > window.height or self.y < 0:
             self.vector = complex(self.vector.real, -self.vector.imag)
+    
+    def burn(self):
+        new_vector = self.vector + complex(self.thrust*cos(self.rotation), self.thrust*sin(self.rotation))
         
-    def damper(self, drag):
-        self.vector *= drag
+        if abs(new_vector) < self.max_spd:
+            self.vector = new_vector
     
     def move(self, dt):
         self.x -= dt * self.vector.real
         self.y += dt * self.vector.imag
-        self.damper(self.drag)
-        
-class Meteor(SpaceObject):
-    def __init__(self, img_file, x, y, mass, max_spd):
-        super().__init__(img_file, x, y, mass, max_spd)
-    
-    def get_hit(self):
-        pass
-    
-    def tick(self, dt):
-        self.get_hit()
-        self.move(dt)
-        self.bounce()
-        self.refresh()
 
 class PlayerShip(SpaceObject):
-    def __init__(self, img_file, x, y, mass, max_spd):
-        super().__init__(img_file, x, y, mass, max_spd)
-        
+    def __init__(self, img_file, x, y, max_spd):
+        super().__init__(img_file, x, y, max_spd)
+        self.thrust = 25
+        self.drag = 0.985
         self.rspeed = radians(9)
+        self.cooldown = 60
         
     def __str__(self):
         return str(self.x) + str(self.y)
-    
-    def down():
-        self.burn(-10)
-    def up():
-        self.burn(25)
-    def left():
-        self.rotation -= self.rspeed
-    def right():
-        self.rotation += self.rspeed
-    def brake():
-        self.damper(0.85)
-    def fire():
-        objects.append(Shot("laserBlue.png", self.x, self.y, 0, 2000, self.vector, self.rotation))
-    
-    
-    def control(self):
-        print(keyboard)
         
-        if keyboard[key.DOWN]:              #S, Down
-            self.burn(-10)
-        if keyboard[key.UP]:              #W, Up
-            self.burn(25)
-        if keyboard[key.LEFT]:              #A, Left
-            self.rotation -= self.rspeed
-        if keyboard[key.RIGHT]:           #D, Right
-            self.rotation += self.rspeed
-        if keyboard[key.B]:                 #B
-            self.damper(0.85)
-        if keyboard[key.SPACE]:             #Space
-            objects.append(Shot("laserBlue.png", self.x, self.y, 0, 2000, self.vector, self.rotation))
-           
+    
+    def damper(self):
+        self.vector *= self.drag
+    
+    def shoot(self):
+        if not self.cooldown:
+            objects.append(Projectile("sprites/projectile.png", self.x, self.y, 750, self.vector, self.rotation))
+            self.cooldown = 60
+    
+    def get_hit(self):    #not work
+        for a in objects:
+            if abs(self.x - a.x) < self.sprite.width/2 and abs(self.y - a.y) < self.sprite.height/2:
+                print("1111")
+        
     def tick(self, dt):
-        self.control()
+        if self.cooldown:
+            self.cooldown -=1
+        
         self.move(dt)
+        self.damper()
         self.bounce()
         self.refresh()
-    
         
-class Shot(SpaceObject):
-    def __init__(self, img_file, x, y, mass, max_spd, vector, rotation):
-        super().__init__(img_file, x, y, mass, max_spd)
+class Projectile(SpaceObject):
+    def __init__(self, img_file, x, y, max_spd, vector, rotation):
+        super().__init__(img_file, x, y, max_spd)
         self.vector = vector
         self.rotation = rotation
+        self.thrust = 100
         
     def tick(self, dt):
-        self.burn(100)
+        self.burn()
         self.move(dt)
         self.refresh()    
         
 
-class Missile(SpaceObject):    
-    def __init__(self, img_file, x, y, mass, max_spd):
-        super().__init__(img_file, x, y, mass, max_spd)
+class Missiled(SpaceObject):    
+    def __init__(self, img_file, x, y, max_spd):
+        super().__init__(img_file, x, y, max_spd)
         
     def aim(self):
         x = player.x - self.x
@@ -159,11 +122,48 @@ class Missile(SpaceObject):
         self.rotation = atan2(y, -x)
         
     def tick(self, dt):
-        self.burn(35)
+        self.burn()
         self.move(dt)
         self.aim()
         self.refresh()
     
+def controler():
+    #P1
+    if keyboard[key.W]:
+        p1.burn()
+    
+    if keyboard[key.S]:
+        p1.drag = 0.95
+    else:
+        p1.drag = 0.985
+    
+    if keyboard[key.A]:
+        p1.rotation -= p1.rspeed
+    
+    if keyboard[key.D]:
+        p1.rotation += p1.rspeed
+    
+    if keyboard[key.SPACE]:
+        p1.shoot()
+    
+    #P2
+    
+    if keyboard[key.UP]:
+        p2.burn()
+    
+    if keyboard[key.DOWN]:
+        p2.drag = 0.95
+    else:
+        p2.drag = 0.985
+    
+    if keyboard[key.LEFT]:
+        p2.rotation -= p2.rspeed
+    
+    if keyboard[key.RIGHT]:
+        p2.rotation += p2.rspeed
+    
+    if keyboard[key.M]:
+        p2.shoot()
 "_________________________________events______________________________________"
 @window.event
 def on_draw():
@@ -172,19 +172,21 @@ def on_draw():
 
 
 def tick(dt):
-    player.tick(dt)
-    missile.tick(dt)
-    
-    for shot in objects:
-        if is_in_area(shot.x, shot.y):
-            shot.tick(dt)
+    controler()
+    for thang in objects:
+        if is_in_area(thang.x, thang.y):
+            thang.tick(dt)
         else:
-            objects.remove(shot)
+            objects.remove(thang)
 
 "_______________________________________main__________________________________"
-     
-player = PlayerShip("test_mini.png", window.width/2, window.height/2, 10, 750)
-missile = Missile("missile.png", -1000, -1000, 10, 750)
+p1 = PlayerShip("sprites/p1.png", window.width/3, window.height/3, 750)
+objects.append(p1)
+
+p2 = PlayerShip("sprites/p2.png", 2*window.width/3, 2*window.height/3, 750)
+objects.append(p2)
+#missile = Missile("missile.png", -1000, -1000, 750)
+
 pyglet.clock.schedule_interval(tick, 1/60)
 
 pyglet.app.run()
