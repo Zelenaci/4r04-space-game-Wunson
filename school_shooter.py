@@ -56,6 +56,19 @@ class SpaceObject(object):
         
         if self.y > window.height or self.y < 0:
             self.vector = complex(self.vector.real, -self.vector.imag)
+            
+            
+        if self.x > window.width+15 and is_in_area(self.x, self.y):
+            self.x = window.width - 15
+            
+        if self.x < -15 and is_in_area(self.x, self.y):
+            self.x = 15
+        
+        if self.y > window.height+15 and is_in_area(self.x, self.y):
+            self.y = window.height - 15
+    
+        if self.y < -15 and is_in_area(self.x, self.y):
+            self.y = 15
     
     def burn(self):
         new_vector = self.vector + complex(self.thrust*cos(self.rotation), self.thrust*sin(self.rotation))
@@ -72,8 +85,9 @@ class PlayerShip(SpaceObject):
         super().__init__(img_file, x, y, max_spd)
         self.thrust = 25
         self.drag = 0.985
-        self.rspeed = radians(9)
-        self.cooldown = 60
+        self.rspeed = radians(7)
+        self.shoot_cooldown = 60
+        self.cooldown = 0
         
     def __str__(self):
         return str(self.x) + str(self.y)
@@ -84,14 +98,14 @@ class PlayerShip(SpaceObject):
     
     def shoot(self):
         if not self.cooldown:
-            objects.append(Projectile("sprites/projectile.png", self.x, self.y, 750, self.vector, self.rotation))
-            self.cooldown = 60
+            objects.append(Projectile("sprites/projectile.png", self.x, self.y, 1500, self.vector, self.rotation))
+            self.cooldown = self.shoot_cooldown
     
     def get_hit(self):    #not work
         for a in objects:
             distance = (((a.x - self.x)**2) + ((a.y - self.y)**2))**(.5)
             
-            if self. cooldown > 50:
+            if self. cooldown > self.shoot_cooldown-10:
                 self.invincible = True
             else:
                 self.invincible = False
@@ -117,7 +131,7 @@ class Projectile(SpaceObject):
         super().__init__(img_file, x, y, max_spd)
         self.vector = vector
         self.rotation = rotation
-        self.thrust = 100
+        self.thrust = 500
         
     def tick(self, dt):
         self.burn()
@@ -199,6 +213,6 @@ p1 = PlayerShip("sprites/p1.png", window.width/3, window.height/3, 750)
 p2 = PlayerShip("sprites/p2.png", 2*window.width/3, 2*window.height/3, 750)
 #missile = Missile("missile.png", -1000, -1000, 750)
 
-pyglet.clock.schedule_interval(tick, 1/60)
+pyglet.clock.schedule_interval(tick, 1/120)
 
 pyglet.app.run()
