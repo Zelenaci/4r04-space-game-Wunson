@@ -47,6 +47,8 @@ class SpaceObject(object):
         self.sprite.x = self.x
         self.sprite.y = self.y
         self.sprite.rotation = degrees(self.rotation - (pi /2))
+        self.hitbox = range(int(self.x - self.sprite.width // 2), int(self.x + self.sprite.width // 2))
+        self.hitboy = range(int(self.y - self.sprite.height // 2), int(self.y + self.sprite.height // 2))
     
     def bounce(self):
         if self.x > window.width or self.x < 0:
@@ -87,13 +89,24 @@ class PlayerShip(SpaceObject):
     
     def get_hit(self):    #not work
         for a in objects:
-            if abs(self.x - a.x) < self.sprite.width/2 and abs(self.y - a.y) < self.sprite.height/2:
-                print("1111")
+            distance = (((a.x - self.x)**2) + ((a.y - self.y)**2))**(.5)
+            
+            if self. cooldown > 50:
+                self.invincible = True
+            else:
+                self.invincible = False
+                
+
+            if distance < self.sprite.width and not self.invincible:
+                print(type(a))
+                self.x, self.y = 10000, 10000
+                
         
     def tick(self, dt):
         if self.cooldown:
             self.cooldown -=1
         
+        self.get_hit()
         self.move(dt)
         self.damper()
         self.bounce()
@@ -112,7 +125,7 @@ class Projectile(SpaceObject):
         self.refresh()    
         
 
-class Missiled(SpaceObject):    
+class Missile(SpaceObject):    
     def __init__(self, img_file, x, y, max_spd):
         super().__init__(img_file, x, y, max_spd)
         
@@ -173,18 +186,17 @@ def on_draw():
 
 def tick(dt):
     controler()
-    for thang in objects:
-        if is_in_area(thang.x, thang.y):
-            thang.tick(dt)
+    p1.tick(dt)
+    p2.tick(dt)
+    for a in objects:
+        if is_in_area(a.x, a.y):
+            a.tick(dt)
         else:
-            objects.remove(thang)
+            objects.remove(a)
 
 "_______________________________________main__________________________________"
 p1 = PlayerShip("sprites/p1.png", window.width/3, window.height/3, 750)
-objects.append(p1)
-
 p2 = PlayerShip("sprites/p2.png", 2*window.width/3, 2*window.height/3, 750)
-objects.append(p2)
 #missile = Missile("missile.png", -1000, -1000, 750)
 
 pyglet.clock.schedule_interval(tick, 1/60)
