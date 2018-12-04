@@ -88,11 +88,11 @@ class PlayerShip(SpaceObject):
         self.rspeed = radians(7)
         self.shoot_cooldown = 60
         self.cooldown = 0
+        self.hittable = [Missile, Projectile]
         
     def __str__(self):
         return str(self.x) + str(self.y)
-        
-    
+           
     def damper(self):
         self.vector *= self.drag
     
@@ -101,25 +101,23 @@ class PlayerShip(SpaceObject):
             objects.append(Projectile("sprites/projectile.png", self.x, self.y, 1500, self.vector, self.rotation))
             self.cooldown = self.shoot_cooldown
     
-    def get_hit(self):    #not work
+    def get_hit(self):
         for a in objects:
             distance = (((a.x - self.x)**2) + ((a.y - self.y)**2))**(.5)
             
             if self. cooldown > self.shoot_cooldown-10:
                 self.invincible = True
             else:
-                self.invincible = False
-                
+                self.invincible = False             
 
-            if distance < self.sprite.width and not self.invincible:
-                print(type(a))
-                self.x, self.y = 10000, 10000
-                
+            if distance < self.sprite.width and not self.invincible and type(a) in self.hittable:
+                self.x, self.y = 10000, 10000              
         
     def tick(self, dt):
         if self.cooldown:
             self.cooldown -=1
-        
+                     
+
         self.get_hit()
         self.move(dt)
         self.damper()
@@ -138,21 +136,30 @@ class Projectile(SpaceObject):
         self.move(dt)
         self.refresh()    
         
-
-class Missile(SpaceObject):    
-    def __init__(self, img_file, x, y, max_spd):
+class Missile(PlayerShip):    
+    def __init__(self, img_file, x, y, max_spd, target):
         super().__init__(img_file, x, y, max_spd)
+        self.target = target
+        self.thrust = 80
+        self.drag = 0.98
+        self.hittable = [Projectile, PlayerShip]
         
     def aim(self):
-        x = player.x - self.x
-        y = player.y - self.y
+        x = self.target.x - self.x
+        y = self.target.y - self.y
         self.rotation = atan2(y, -x)
+        
+    #def get_hit():
+     #   super().get_hit()
+        
         
     def tick(self, dt):
         self.burn()
+        self.damper()
         self.move(dt)
+        self.get_hit()
         self.aim()
-        self.refresh()
+        self.refresh()        
     
 def controler():
     #P1
@@ -173,8 +180,7 @@ def controler():
     if keyboard[key.SPACE]:
         p1.shoot()
     
-    #P2
-    
+    #P2 
     if keyboard[key.UP]:
         p2.burn()
     
@@ -202,17 +208,24 @@ def tick(dt):
     controler()
     p1.tick(dt)
     p2.tick(dt)
+    
     for a in objects:
-        if is_in_area(a.x, a.y):
+        if is_in_area(a.x, a.y) or type(a) is Missile:
             a.tick(dt)
         else:
             objects.remove(a)
-
+            
 "_______________________________________main__________________________________"
 p1 = PlayerShip("sprites/p1.png", window.width/3, window.height/3, 750)
 p2 = PlayerShip("sprites/p2.png", 2*window.width/3, 2*window.height/3, 750)
-#missile = Missile("missile.png", -1000, -1000, 750)
+objects.append(Missile("sprites/missile.png", -1000, -1000, 1000, p2))
+objects.append(Missile("sprites/missile.png", -1000, -1000, 1000, p1))
 
 pyglet.clock.schedule_interval(tick, 1/120)
+
+hit = [Projectile, Missile]
+print(type(objects[0]) in  hit)
+
+#print(type(PlayerShip) == type(p1))
 
 pyglet.app.run()
