@@ -86,9 +86,10 @@ class PlayerShip(SpaceObject):
         self.thrust = 25
         self.drag = 0.985
         self.rspeed = radians(7)
-        self.shoot_cooldown = 60
+        self.shoot_cooldown = 40
         self.cooldown = 0
         self.hittable = [Missile, Projectile]
+        self.alive = True
         
     def __str__(self):
         return str(self.x) + str(self.y)
@@ -111,7 +112,13 @@ class PlayerShip(SpaceObject):
                 self.invincible = False             
 
             if distance < self.sprite.width and not self.invincible and type(a) in self.hittable:
-                self.x, self.y = 10000, 10000              
+                self.x, self.y = 10000, 10000
+                self.alive = False
+                
+    def reborn(self, mul = 1):
+        self.x = mul*window.width/3
+        self.y = mul*window.height/3
+        self.alive = True
         
     def tick(self, dt):
         if self.cooldown:
@@ -140,7 +147,7 @@ class Missile(PlayerShip):
     def __init__(self, img_file, x, y, max_spd, target):
         super().__init__(img_file, x, y, max_spd)
         self.target = target
-        self.thrust = 80
+        self.thrust = 50
         self.drag = 0.98
         self.hittable = [Projectile, PlayerShip]
         
@@ -177,7 +184,7 @@ def controler():
     if keyboard[key.D]:
         p1.rotation += p1.rspeed
     
-    if keyboard[key.SPACE]:
+    if keyboard[key.Q]:
         p1.shoot()
     
     #P2 
@@ -215,6 +222,11 @@ def tick(dt):
         else:
             objects.remove(a)
             
+    if not (p1.alive or p2.alive):
+        p1.reborn(1)
+        p2.reborn(2)
+            
+        
 "_______________________________________main__________________________________"
 p1 = PlayerShip("sprites/p1.png", window.width/3, window.height/3, 750)
 p2 = PlayerShip("sprites/p2.png", 2*window.width/3, 2*window.height/3, 750)
