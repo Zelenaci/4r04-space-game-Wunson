@@ -41,12 +41,7 @@ class SpaceObject(pyglet.sprite.Sprite):
         for a in objects:
             distance = (((a.x - self.x)**2) + ((a.y - self.y)**2))**(.5)
             
-            if self. cooldown > self.shoot_cooldown-10:
-                self.invincible = True
-            else:
-                self.invincible = False
-
-            if distance < self.height and not self.invincible and type(a) in self.hittable:
+            if distance < self.height and type(a) in self.hittable:
                 self.x, self.y = 10000, 10000
 
 
@@ -106,7 +101,11 @@ class PlayerShip(MoveObject):
     def shoot(self):
         if not self.cooldown:
             objects.append(Projectile("sprites/projectile.png", self.x, self.y, self.vector, self.rotation))
-            self.cooldown = self.shoot_cooldown                
+            self.cooldown = self.shoot_cooldown
+
+    def get_hit(self):
+        if self. cooldown < self.shoot_cooldown-10:
+            super().get_hit()
         
     def tick(self, dt):
         if self.cooldown:
@@ -207,6 +206,9 @@ def tick(dt):
 "_______________________________________main__________________________________"
 p1 = PlayerShip("sprites/p1.png", window.width/3, window.height/3)
 p2 = PlayerShip("sprites/p2.png", 2*window.width/3, 2*window.height/3)
+
+objects.append(Missile("sprites/missile.png", 100, 100, p2))
+objects.append(Missile("sprites/missile.png", 100, 100, p1))
 
 pyglet.clock.schedule_interval(tick, 1/120)
 
