@@ -41,8 +41,15 @@ class SpaceObject(pyglet.sprite.Sprite):
         for a in objects:
             distance = (((a.x - self.x)**2) + ((a.y - self.y)**2))**(.5)
             
-            if distance < self.height and type(a) in self.hittable:
+            if overlap(self.hitbox, a.hitbox and overlap(self.hitboy, a.hitboy)):
                 self.x, self.y = 10000, 10000
+                
+    def hitbox_refresh(self):
+        self.hitbox = (self.x - self.width//2, self.x + self.width//2)
+        self.hitboy = (self.y - self.width//2, self.x + self.width//2)
+        
+    def tick(self, dt):
+        self.hitbox_refresh()
 
 
 class MoveObject(SpaceObject):
@@ -83,8 +90,12 @@ class MoveObject(SpaceObject):
     def move(self, dt):
         self.x -= dt * self.vector.real
         self.y += dt * self.vector.imag
-
-
+        
+    def tick(self, dt):
+        super().tick(dt)
+        self.damper()
+        self.move(dt)
+        self.get_hit()
 
 
 class PlayerShip(MoveObject):
@@ -96,7 +107,7 @@ class PlayerShip(MoveObject):
         self.rspeed = 7
         self.shoot_cooldown = 30
         self.cooldown = 0
-        self.hittable = [Projectile]    #Add missile
+        self.hittable = [Projectile, Missile]
     
     def shoot(self):
         if not self.cooldown:
@@ -108,13 +119,11 @@ class PlayerShip(MoveObject):
             super().get_hit()
         
     def tick(self, dt):
+        super().tick(dt)
+        self.bounce()
         if self.cooldown:
             self.cooldown -=1
         
-        self.get_hit()
-        self.move(dt)
-        self.damper()
-        self.bounce()
 
 class Projectile(MoveObject):
     def __init__(self, img_file, x, y, vector, rotation):
@@ -123,31 +132,31 @@ class Projectile(MoveObject):
         self.rotation = rotation
         self.thrust = 500
         self.max_spd = 1500
-        self.hittable = None
+        self.hittable = []
+        self.drag = 1
         
     def tick(self, dt):
+        super().tick(dt)
         self.burn()
-        self.move(dt)
 
 class Missile(MoveObject):    
     def __init__(self, img_file, x, y, target):
         super().__init__(img_file, x, y)
         self.target = target
-        self.thrust = 50
-        self.max_spd = 1000
+        self.thrust = 40
+        self.max_spd = 700
         self.drag = 0.98
         self.hittable = [Projectile, PlayerShip]
         
     def aim(self):
         x = self.target.x - self.x
         y = self.target.y - self.y
-        self.rotation = atan2(y, -x)
+        self.rotation = degrees(atan2(y, -x)) - 90
         
     def tick(self, dt):
+        super().tick(dt)
         self.burn()
-        self.damper()
-        self.move(dt)
-        self.get_hit()
+        self.bounce()
         self.aim()
 
 def controler():
@@ -195,8 +204,6 @@ def on_draw():
 
 def tick(dt):
     controler()
-    p1.tick(dt)
-    p2.tick(dt)
     for a in objects:
         if is_in_area(a.x, a.y):
             a.tick(dt)
@@ -207,6 +214,8 @@ def tick(dt):
 p1 = PlayerShip("sprites/p1.png", window.width/3, window.height/3)
 p2 = PlayerShip("sprites/p2.png", 2*window.width/3, 2*window.height/3)
 
+objects.append(p1)
+objects.append(p2)
 objects.append(Missile("sprites/missile.png", 100, 100, p2))
 objects.append(Missile("sprites/missile.png", 100, 100, p1))
 
