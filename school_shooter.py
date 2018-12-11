@@ -1,6 +1,6 @@
 "____________________________________imports__________________________________"
 import pyglet
-from math import cos, sin, pi, radians, degrees, atan2
+from math import cos, sin, radians, degrees, atan2
 
 "________________________________pyglet_setup_________________________________"
 
@@ -26,7 +26,7 @@ def is_in_area(x, y, x1=-50, x2=window.width+50, y1=-50, y2=window.height+50):
 "____________________________________classes__________________________________"
 class SpaceObject(pyglet.sprite.Sprite):
 
-    def __init__(self, img_file, x, y, max_spd, hittable):
+    def __init__(self, img_file, x, y):
         self.img = load_image(img_file)
         self.img.anchor_x = self.img.width // 2
         self.img.anchor_y = self.img.height // 2
@@ -34,21 +34,44 @@ class SpaceObject(pyglet.sprite.Sprite):
         super().__init__(self.img, batch = batch)
         
         self.rotation = 0
-        self.vector = 0 + 0j
-        
         self.x = x
         self.y = y
-        self.max_spd = max_spd
-        
-        self. hittable = hittable
     
+    def get_hit(self):
+        for a in objects:
+            distance = (((a.x - self.x)**2) + ((a.y - self.y)**2))**(.5)
+            
+            if self. cooldown > self.shoot_cooldown-10:
+                self.invincible = True
+            else:
+                self.invincible = False
+
+            if distance < self.height and not self.invincible and type(a) in self.hittable:
+                self.x, self.y = 10000, 10000
+
+
+class MoveObject(SpaceObject):
+    def __init__(self, img_file, x, y):
+        super().__init__(img_file, x, y)
+        
+        self.vector = 0 + 0j
+        
+    def damper(self):
+        self.vector *= self.drag
+        
+    def burn(self):
+        angle = radians(self.rotation + 90)
+        new_vector = self.vector + complex(self.thrust*cos(angle), self.thrust*sin(angle))
+        
+        if abs(new_vector) < self.max_spd:
+            self.vector = new_vector
+            
     def bounce(self):
         if self.x > window.width or self.x < 0:
             self.vector = complex(-self.vector.real, self.vector.imag) 
         
         if self.y > window.height or self.y < 0:
-            self.vector = complex(self.vector.real, -self.vector.imag)
-            
+            self.vector = complex(self.vector.real, -self.vector.imag)           
             
         if self.x > window.width + 15 and is_in_area(self.x, self.y):
             self.x = window.width - 15
@@ -61,53 +84,28 @@ class SpaceObject(pyglet.sprite.Sprite):
     
         if self.y < -15 and is_in_area(self.x, self.y):
             self.y = 15
-    
-    def get_hit(self):    #not work
-        for a in objects:
-            distance = (((a.x - self.x)**2) + ((a.y - self.y)**2))**(.5)
-            
-            if self. cooldown > self.shoot_cooldown-10:
-                self.invincible = True
-            else:
-                self.invincible = False
-
-            if distance < self.height and not self.invincible and type(a) in hittable:
-                print(type(a))
-                self.x, self.y = 10000, 10000
-
-    
-    def burn(self):
-        angle = radians(self.rotation + 90)
-        new_vector = self.vector + complex(self.thrust*cos(angle), self.thrust*sin(angle))
         
-        if abs(new_vector) < self.max_spd:
-            self.vector = new_vector
-    
     def move(self, dt):
         self.x -= dt * self.vector.real
         self.y += dt * self.vector.imag
 
-class PlayerShip(SpaceObject):
-    def __init__(self, img_file, x, y, max_spd, hittable):
-        
-        super().__init__(img_file, x, y, max_spd, hittable)
+
+
+
+class PlayerShip(MoveObject):
+    def __init__(self, img_file, x, y):
+        super().__init__(img_file, x, y)
         self.thrust = 25
+        self.max_spd = 750
         self.drag = 0.985
-        self.rspeed = 10
+        self.rspeed = 7
         self.shoot_cooldown = 30
         self.cooldown = 0
-        
-    def __str__(self):
-        return str(self.x) + str(self.y)
-        
+        self.hittable = [Projectile]    #Add missile
     
-    def damper(self):
-        self.vector *= self.drag
-        
-     
     def shoot(self):
         if not self.cooldown:
-            objects.append(Projectile("sprites/projectile.png", self.x, self.y, 1500, [], self.vector, self.rotation))
+            objects.append(Projectile("sprites/projectile.png", self.x, self.y, self.vector, self.rotation))
             self.cooldown = self.shoot_cooldown                
         
     def tick(self, dt):
@@ -119,27 +117,39 @@ class PlayerShip(SpaceObject):
         self.damper()
         self.bounce()
 
-class Projectile(SpaceObject):
-    def __init__(self, img_file, x, y, max_spd, hittable, vector, rotation):
-        super().__init__(img_file, x, y, max_spd, hittable)
+class Projectile(MoveObject):
+    def __init__(self, img_file, x, y, vector, rotation):
+        super().__init__(img_file, x, y)
         self.vector = vector
         self.rotation = rotation
         self.thrust = 500
+        self.max_spd = 1500
+        self.hittable = None
         
     def tick(self, dt):
         self.burn()
         self.move(dt)
+
+class Missile(MoveObject):    
+    def __init__(self, img_file, x, y, target):
+        super().__init__(img_file, x, y)
+        self.target = target
+        self.thrust = 50
+        self.max_spd = 1000
+        self.drag = 0.98
+        self.hittable = [Projectile, PlayerShip]
         
-class Projectile(SpaceObject):
-    def __init__(self, img_file, x, y, max_spd, vector, rotation):
-        super().__init__(img_file, x, y, max_spd)
-        self.vector = vector
-        self.rotation = rotation
-        self.thrust = 500
+    def aim(self):
+        x = self.target.x - self.x
+        y = self.target.y - self.y
+        self.rotation = atan2(y, -x)
         
     def tick(self, dt):
         self.burn()
+        self.damper()
         self.move(dt)
+        self.get_hit()
+        self.aim()
 
 def controler():
     #P1
@@ -160,8 +170,7 @@ def controler():
     if keyboard[key.SPACE]:
         p1.shoot()
     
-    #P2
-    
+    #P2    
     if keyboard[key.UP]:
         p2.burn()
     
@@ -196,9 +205,8 @@ def tick(dt):
             objects.remove(a)
 
 "_______________________________________main__________________________________"
-p1 = PlayerShip("sprites/p1.png", window.width/3, window.height/3, 750, [Projectile])
-p2 = PlayerShip("sprites/p2.png", 2*window.width/3, 2*window.height/3, 750, [Projectile])
-#missile = Missile("missile.png", -1000, -1000, 750)
+p1 = PlayerShip("sprites/p1.png", window.width/3, window.height/3)
+p2 = PlayerShip("sprites/p2.png", 2*window.width/3, 2*window.height/3)
 
 pyglet.clock.schedule_interval(tick, 1/120)
 
