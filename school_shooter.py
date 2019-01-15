@@ -1,11 +1,12 @@
 "____________________________________imports__________________________________"
 import pyglet
 from math import cos, sin, pi, radians, degrees, atan2
+from random import randint
 
 "________________________________pyglet_setup_________________________________"
 
 key = pyglet.window.key
-window = pyglet.window.Window(1300, 700)
+window = pyglet.window.Window(1366, 700)
 keyboard = key.KeyStateHandler()
 window.push_handlers(keyboard)
 batch = pyglet.graphics.Batch()
@@ -86,10 +87,11 @@ class PlayerShip(SpaceObject):
         self.thrust = 25
         self.drag = 0.985
         self.rspeed = radians(7)
-        self.shoot_cooldown = 40
+        self.shoot_cooldown = 10
         self.cooldown = 0
         self.hittable = [Missile, Projectile]
-        self.alive = True
+        self.deaths = 0
+        self.respawn = "outside"
         
     def __str__(self):
         return str(self.x) + str(self.y)
@@ -112,8 +114,10 @@ class PlayerShip(SpaceObject):
                 self.invincible = False             
 
             if distance < self.sprite.width and not self.invincible and type(a) in self.hittable:
-                self.x, self.y = 10000, 10000
-                self.alive = False
+                if self.respawn == "inside":
+                    self.x, self.y = randint(100, window.width-100), randint(100, window.height-100)
+                else:
+                    self.x, self.y = randint(-2000, 2000), randint(-2000, 2000)
                 
     def reborn(self, mul = 1):
         self.x = mul*window.width/3
@@ -210,7 +214,6 @@ def on_draw():
     window.clear()
     batch.draw()
 
-
 def tick(dt):
     controler()
     p1.tick(dt)
@@ -222,22 +225,23 @@ def tick(dt):
         else:
             objects.remove(a)
             
-    if not (p1.alive or p2.alive):
-        p1.reborn(1)
-        p2.reborn(2)
-            
         
 "_______________________________________main__________________________________"
 p1 = PlayerShip("sprites/p1.png", window.width/3, window.height/3, 750)
+p1.respawn = "inside"
+
 p2 = PlayerShip("sprites/p2.png", 2*window.width/3, 2*window.height/3, 750)
-objects.append(Missile("sprites/missile.png", -1000, -1000, 1000, p2))
-objects.append(Missile("sprites/missile.png", -1000, -1000, 1000, p1))
+p2.respawn = "inside"
+
+for i in range(4):
+    objects.append(Missile("sprites/missile.png", randint(-2000, 2000), randint(-2000, 2000), 400, p2))
+    objects.append(Missile("sprites/missile.png", randint(-2000, 2000), randint(-2000, 2000), 400, p1))
+
 
 pyglet.clock.schedule_interval(tick, 1/120)
 
 hit = [Projectile, Missile]
 print(type(objects[0]) in  hit)
 
-#print(type(PlayerShip) == type(p1))
 
 pyglet.app.run()
