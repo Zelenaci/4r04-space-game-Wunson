@@ -1,11 +1,12 @@
 "____________________________________imports__________________________________"
 import pyglet
 from math import cos, sin, pi, radians, degrees, atan2
+from random import randint
 
 "________________________________pyglet_setup_________________________________"
 
 key = pyglet.window.key
-window = pyglet.window.Window(1300, 700)
+window = pyglet.window.Window(1366, 700)
 keyboard = key.KeyStateHandler()
 window.push_handlers(keyboard)
 batch = pyglet.graphics.Batch()
@@ -55,8 +56,7 @@ class SpaceObject(object):
             self.vector = complex(-self.vector.real, self.vector.imag) 
         
         if self.y > window.height or self.y < 0:
-            self.vector = complex(self.vector.real, -self.vector.imag)
-            
+            self.vector = complex(self.vector.real, -self.vector.imag)          
             
         if self.x > window.width+15 and is_in_area(self.x, self.y):
             self.x = window.width - 15
@@ -86,13 +86,15 @@ class PlayerShip(SpaceObject):
         self.thrust = 25
         self.drag = 0.985
         self.rspeed = radians(7)
-        self.shoot_cooldown = 60
+        self.shoot_cooldown = 10
         self.cooldown = 0
+        self.hittable = [Missile, Projectile]
+        self.deaths = 0
+        self.respawn = "outside"
         
     def __str__(self):
         return str(self.x) + str(self.y)
-        
-    
+           
     def damper(self):
         self.vector *= self.drag
     
@@ -101,25 +103,30 @@ class PlayerShip(SpaceObject):
             objects.append(Projectile("sprites/projectile.png", self.x, self.y, 1500, self.vector, self.rotation))
             self.cooldown = self.shoot_cooldown
     
-    def get_hit(self):    #not work
+    def get_hit(self):
         for a in objects:
             distance = (((a.x - self.x)**2) + ((a.y - self.y)**2))**(.5)
             
             if self. cooldown > self.shoot_cooldown-10:
                 self.invincible = True
             else:
-                self.invincible = False
-                
+                self.invincible = False             
 
-            if distance < self.sprite.width and not self.invincible:
-                print(type(a))
-                self.x, self.y = 10000, 10000
+            if distance < self.sprite.width and not self.invincible and type(a) in self.hittable:
+                if self.respawn == "inside":
+                    self.x, self.y = randint(100, window.width-100), randint(100, window.height-100)
+                else:
+                    self.x, self.y = randint(-2000, 2000), randint(-2000, 2000)
                 
+    def reborn(self, mul = 1):
+        self.x = mul*window.width/3
+        self.y = mul*window.height/3
+        self.alive = True
         
     def tick(self, dt):
         if self.cooldown:
-            self.cooldown -=1
-        
+            self.cooldown -=1                  
+
         self.get_hit()
         self.move(dt)
         self.damper()
@@ -138,21 +145,26 @@ class Projectile(SpaceObject):
         self.move(dt)
         self.refresh()    
         
-
-class Missile(SpaceObject):    
-    def __init__(self, img_file, x, y, max_spd):
+class Missile(PlayerShip):    
+    def __init__(self, img_file, x, y, max_spd, target):
         super().__init__(img_file, x, y, max_spd)
+        self.target = target
+        self.thrust = 50
+        self.drag = 0.98
+        self.hittable = [Projectile, PlayerShip]
         
     def aim(self):
-        x = player.x - self.x
-        y = player.y - self.y
+        x = self.target.x - self.x
+        y = self.target.y - self.y
         self.rotation = atan2(y, -x)
         
     def tick(self, dt):
         self.burn()
+        self.damper()
         self.move(dt)
+        self.get_hit()
         self.aim()
-        self.refresh()
+        self.refresh()        
     
 def controler():
     #P1
@@ -170,11 +182,10 @@ def controler():
     if keyboard[key.D]:
         p1.rotation += p1.rspeed
     
-    if keyboard[key.SPACE]:
+    if keyboard[key.Q]:
         p1.shoot()
     
-    #P2
-    
+    #P2 
     if keyboard[key.UP]:
         p2.burn()
     
@@ -197,21 +208,28 @@ def on_draw():
     window.clear()
     batch.draw()
 
-
 def tick(dt):
     controler()
     p1.tick(dt)
     p2.tick(dt)
+    
     for a in objects:
-        if is_in_area(a.x, a.y):
+        if is_in_area(a.x, a.y) or type(a) is Missile:
             a.tick(dt)
         else:
             objects.remove(a)
-
+            
+        
 "_______________________________________main__________________________________"
 p1 = PlayerShip("sprites/p1.png", window.width/3, window.height/3, 750)
+p1.respawn = "inside"
+
 p2 = PlayerShip("sprites/p2.png", 2*window.width/3, 2*window.height/3, 750)
-#missile = Missile("missile.png", -1000, -1000, 750)
+p2.respawn = "inside"
+
+for i in range(4):
+    objects.append(Missile("sprites/missile.png", randint(-2000, 2000), randint(-2000, 2000), 500, p2))
+    objects.append(Missile("sprites/missile.png", randint(-2000, 2000), randint(-2000, 2000), 500, p1))
 
 pyglet.clock.schedule_interval(tick, 1/120)
 
