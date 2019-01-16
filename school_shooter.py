@@ -56,8 +56,7 @@ class SpaceObject(object):
             self.vector = complex(-self.vector.real, self.vector.imag) 
         
         if self.y > window.height or self.y < 0:
-            self.vector = complex(self.vector.real, -self.vector.imag)
-            
+            self.vector = complex(self.vector.real, -self.vector.imag)          
             
         if self.x > window.width+15 and is_in_area(self.x, self.y):
             self.x = window.width - 15
@@ -126,8 +125,7 @@ class PlayerShip(SpaceObject):
         
     def tick(self, dt):
         if self.cooldown:
-            self.cooldown -=1
-                     
+            self.cooldown -=1                  
 
         self.get_hit()
         self.move(dt)
@@ -159,10 +157,6 @@ class Missile(PlayerShip):
         x = self.target.x - self.x
         y = self.target.y - self.y
         self.rotation = atan2(y, -x)
-        
-    #def get_hit():
-     #   super().get_hit()
-        
         
     def tick(self, dt):
         self.burn()
@@ -234,14 +228,9 @@ p2 = PlayerShip("sprites/p2.png", 2*window.width/3, 2*window.height/3, 750)
 p2.respawn = "inside"
 
 for i in range(4):
-    objects.append(Missile("sprites/missile.png", randint(-2000, 2000), randint(-2000, 2000), 400, p2))
-    objects.append(Missile("sprites/missile.png", randint(-2000, 2000), randint(-2000, 2000), 400, p1))
-
+    objects.append(Missile("sprites/missile.png", randint(-2000, 2000), randint(-2000, 2000), 500, p2))
+    objects.append(Missile("sprites/missile.png", randint(-2000, 2000), randint(-2000, 2000), 500, p1))
 
 pyglet.clock.schedule_interval(tick, 1/120)
-
-hit = [Projectile, Missile]
-print(type(objects[0]) in  hit)
-
 
 pyglet.app.run()

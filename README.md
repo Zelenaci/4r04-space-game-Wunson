@@ -1,11 +1,16 @@
 # PRG-SpaceGame
 
-Vesmírná střílečka
+Jedná se zatím pouze o prototyp vesmírné střílečky pro 2 hráče. Hráči mohou hrát dle domluvy buď proti sobě, nebo společně proti nepřátelským raketám. Část raket je naváděna na hráče 1, část zase na hráče 2. Všechny rakety lze sestřelit.
+Po zásahu raketou se hráč objeví na novém náhodném místě a může hrát znovu. Do budoucna by to chtělo přidat ještě nějaké počítadlo skóre.
 
-[![Join the chat at gitter.im/spseol/Python](https://badges.gitter.im/spseol/PRG-No.svg)](https://gitter.im/spseol/Python?utm_source=share-link&utm_medium=link&utm_campaign=share-link)
+## Ovládání:
 
-Vytvořte vesmírnou střílečku, dle své libosti a vkusu... :-)
+### Hráč 1:
+* <b>Pohyb:</b> UP, DOWN, LEFT, RIGHT
+* <b>Střelba:</b> M
 
-* https://naucse.python.cz/2018/installfest/
-* https://opengameart.org/content/space-shooter-redux
-* https://kenney.nl/
+### Hráč 2:
+* <b>Pohyb:</b> W, S, A, D
+* <b>Střelba:</b> Q
+
+Ovládání lodí by se mělo chovat podobně, jako ve skutečném mezihvězdném prostoru. Každá loď, ale i všechny ostatní objekty, má tedy určitý vektor pohybu. Při zážehu trysky se pak mění velikost, případně směr tohoto vektoru. Maximální velikost vektoru, tedy maximální rychlost je u každého objektu omezena. Pro lepší ovladatelnost všechny objekty také neustále brzdí. Pokud tedy vypneme trysky, naše loď po chvilce sama zastaví. Zmáčknutím klávesy pro směr lze pak brždění ještě urychlit.
